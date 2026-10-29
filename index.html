@@ -1,0 +1,381 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Misiones IA·F · Copilot y Power Automate</title>
+<style>
+/* ===== Marcador en vivo (opcional) =====
+   Pega aquí la URL de tu Firebase Realtime Database (termina en .firebasedatabase.app o .firebaseio.com).
+   Si se deja vacía, la app funciona en modo individual (sin marcador compartido). */
+</style>
+<script>
+  const FIREBASE_DB_URL = "https://ia-facil-para-todos-default-rtdb.europe-west1.firebasedatabase.app";   // p. ej. "https://taller-iaf-default-rtdb.europe-west1.firebasedatabase.app"
+</script>
+<style>
+:root { --teal:#0E5E6F; --teal2:#13707F; --coral:#FF7A59; --ink:#0B2B33; --cream:#F4F8F9; --mint:#BFE3E8; --yel:#F2B233; --line:#D5E3E6; --grey:#4E6871 }
+* { box-sizing:border-box }
+body { margin:0; font-family:"Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif; background:var(--cream); color:var(--ink); font-size:16px; line-height:1.5 }
+button { font:inherit; cursor:pointer }
+.top { background:var(--teal); color:#fff; position:sticky; top:0; z-index:20; box-shadow:0 2px 10px rgba(0,0,0,.12) }
+.top .in { max-width:860px; margin:0 auto; padding:10px 18px; display:flex; align-items:center; gap:14px; flex-wrap:wrap }
+.top svg.logo { height:38px; width:auto }
+.who { margin-left:auto; display:flex; align-items:center; gap:10px; font-weight:700 }
+.pts { background:#fff; color:var(--ink); border-radius:30px; padding:3px 12px; display:flex; gap:6px; align-items:center }
+.lvl { background:var(--coral); border-radius:30px; padding:3px 12px; font-size:13px; letter-spacing:.5px }
+.live { font-size:12px; color:var(--mint) } .live b { display:inline-block; width:8px; height:8px; border-radius:50%; background:#5FD38D; margin-right:5px }
+.live.off b { background:#999 }
+.bar { height:6px; background:rgba(255,255,255,.2) } .bar i { display:block; height:100%; width:0; background:var(--yel); transition:width .6s }
+.wrap { max-width:860px; margin:0 auto; padding:18px }
+.tabs { display:flex; gap:8px; margin:4px 0 16px }
+.tabs button { border:0; background:#fff; border-radius:30px; padding:8px 18px; font-weight:700; color:var(--grey); box-shadow:0 1px 4px rgba(0,0,0,.06) }
+.tabs button.on { background:var(--ink); color:#fff }
+.card { background:#fff; border-radius:16px; box-shadow:0 2px 10px rgba(14,94,111,.08); margin-bottom:12px; overflow:hidden }
+.mh { display:flex; align-items:center; gap:12px; padding:14px 18px; cursor:pointer }
+.mh .k { font-size:12px; letter-spacing:1.5px; font-weight:700; color:var(--coral); text-transform:uppercase }
+.mh h3 { margin:0; font-size:19px }
+.mh .sc { margin-left:auto; font-weight:700; color:var(--teal); white-space:nowrap }
+.mh .chev { transition:transform .2s; color:var(--grey) } .card.open .chev { transform:rotate(180deg) }
+.mb { display:none; padding:0 18px 18px } .card.open .mb { display:block }
+.card.done .mh .sc { color:#1E9E5A }
+p.lead { margin:0 0 12px; color:var(--grey) }
+.blk { border:1.5px solid var(--line); border-radius:12px; margin:10px 0; overflow:hidden }
+.blk .bh { display:flex; align-items:center; justify-content:space-between; background:var(--cream); padding:6px 12px; font-size:12px; font-weight:700; letter-spacing:1px; color:var(--teal) }
+.blk.vaga .bh { color:#B5452F } .blk.rctf .bh { color:var(--coral) }
+.blk pre { margin:0; padding:10px 12px; white-space:pre-wrap; font-family:inherit; font-size:15px }
+.cp { border:1.5px solid var(--teal); background:#fff; color:var(--teal); border-radius:20px; padding:3px 12px; font-size:13px; font-weight:700 }
+.cp.ok { background:var(--teal); color:#fff }
+.chk { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px; background:var(--cream); margin:8px 0; cursor:pointer; user-select:none }
+.chk input { width:20px; height:20px; accent-color:var(--teal) }
+.chk .p { margin-left:auto; font-weight:800; color:var(--coral) }
+.chk.locked { opacity:.45; cursor:not-allowed }
+.hint { font-size:13px; color:var(--grey); margin:4px 2px 0 }
+.quiz .q { padding:10px 0; border-bottom:1px solid var(--line) } .quiz .q:last-child { border:0 }
+.quiz .opts { display:flex; gap:8px; margin-top:6px; flex-wrap:wrap }
+.quiz .opts button { border:1.5px solid var(--line); background:#fff; border-radius:20px; padding:5px 14px; font-weight:600 }
+.quiz .opts button.right { background:#1E9E5A; border-color:#1E9E5A; color:#fff }
+.quiz .opts button.wrong { background:#E5534B; border-color:#E5534B; color:#fff }
+.quiz .why { font-size:14px; color:var(--grey); margin-top:4px }
+select, input[type=text], textarea { width:100%; font:inherit; border:1.5px solid var(--line); border-radius:10px; padding:10px 12px; background:#fff; color:var(--ink) }
+textarea { min-height:60px; resize:vertical }
+label.f { display:block; font-weight:700; margin:10px 0 4px; font-size:14px } label.f b { color:var(--coral) }
+.steps li { margin:6px 0 }
+.xls { border:1.5px solid #B9C9CD; border-radius:8px; overflow:auto; margin:8px 0 12px; background:#fff }
+.xls .xbar { background:#1D6F42; color:#fff; font-size:13px; font-weight:600; padding:5px 10px; display:flex; gap:8px; align-items:center }
+.xls .xic { background:#fff; color:#1D6F42; font-weight:900; border-radius:3px; padding:0 5px; font-size:12px }
+.xls table { border-collapse:collapse; width:100%; font-size:14px; font-family:Calibri, 'Segoe UI', Arial, sans-serif }
+.xls td, .xls th { border:1px solid #D4D4D4; padding:4px 8px; white-space:nowrap; text-align:left }
+.xls th.cl, .xls td.rn { background:#EFEFEF; color:#666; font-weight:400; text-align:center; font-size:12px; width:1%; padding:2px 6px }
+.xls td.hd { background:#E2EFDA; font-weight:700 } .xls td.num { text-align:right }
+.board .row { display:flex; align-items:center; gap:12px; padding:12px 16px; border-bottom:1px solid var(--line) }
+.board .row:last-child { border:0 } .board .row.me { background:#FFF4EC }
+.board .pos { width:30px; font-weight:800; color:var(--grey); text-align:center }
+.board .nm { font-weight:700 } .board .lv { font-size:12px; color:var(--coral); font-weight:700; letter-spacing:.5px; margin-left:8px }
+.board .pp { margin-left:auto; font-weight:800; color:var(--teal) }
+.board .meter { height:6px; border-radius:3px; background:var(--cream); margin-top:4px; width:180px; max-width:40vw } .board .meter i { display:block; height:100%; border-radius:3px; background:var(--coral) }
+.btn { border:0; background:var(--coral); color:#fff; font-weight:800; border-radius:12px; padding:12px 18px; font-size:16px }
+.btn.sec { background:var(--teal) }
+.levels { display:flex; gap:8px; flex-wrap:wrap; margin:12px 0 }
+.levels span { border:1.5px solid var(--line); border-radius:20px; padding:3px 12px; font-size:13px; font-weight:700; color:var(--grey); background:#fff }
+/* Entrada */
+.gate { max-width:560px; margin:40px auto; background:#fff; border-radius:20px; padding:28px; box-shadow:0 4px 20px rgba(14,94,111,.12) }
+.gate h1 { margin:6px 0 6px; font-size:30px; line-height:1.15 } .gate h1 span { color:var(--coral) }
+.err { color:#C0392B; font-size:14px; margin-top:6px; min-height:20px }
+/* Animaciones */
+.toast { position:fixed; left:50%; bottom:24px; transform:translateX(-50%) translateY(120px); background:var(--ink); color:#fff; padding:12px 20px; border-radius:30px; font-weight:700; transition:transform .35s; z-index:50 }
+.toast.show { transform:translateX(-50%) translateY(0) }
+.banner { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(11,43,51,.75); z-index:60; opacity:0; pointer-events:none; transition:opacity .3s }
+.banner.show { opacity:1; pointer-events:auto }
+.banner .bx { background:#fff; border-radius:22px; padding:30px 36px; text-align:center; max-width:90vw; transform:scale(.8); transition:transform .3s }
+.banner.show .bx { transform:scale(1) } .banner h2 { margin:6px 0; font-size:30px; color:var(--teal) }
+.spark { position:fixed; pointer-events:none; z-index:55; color:var(--coral); font-size:22px; animation:fly 1s ease-out forwards }
+@keyframes fly { from { opacity:1; transform:translate(0,0) scale(1) } to { opacity:0; transform:translate(var(--dx), var(--dy)) scale(.4) } }
+/* Pantalla grande */
+body.screen .top, body.screen .tabs, body.screen #missions, body.screen #pa, body.screen #bigscreen { display:none }
+.tsc { font-size:12px; opacity:.8; font-weight:600 }
+.scrhead { display:none } body.screen .scrhead { display:flex; align-items:center; gap:24px; margin:10px 0 24px; font-size:26px } body.screen .scrhead b { color:var(--coral) }
+body.screen .wrap { max-width:1300px }
+body.screen .board .row { padding:18px 24px; font-size:26px } body.screen .board .meter { width:340px; height:10px }
+body.screen h2.bt { font-size:40px }
+.hide { display:none !important }
+#printArea { display:none }
+@media print { @page { size:A4; margin:12mm }
+  body.printing > *:not(#printArea) { display:none !important } body.printing #printArea { display:block } body { background:#fff } }
+.ch { font-family:"Segoe UI", Arial, sans-serif; color:#0B2B33; font-size:9.8pt; line-height:1.36 }
+.ch .hd { background:#0E5E6F; color:#fff; border-radius:10px; padding:16px 20px; display:flex; align-items:center; gap:18px; -webkit-print-color-adjust:exact; print-color-adjust:exact }
+.ch .hd svg { height:64px; width:auto; flex:0 0 auto } .ch .hd .k { font-size:9pt; letter-spacing:2px; font-weight:700; color:#BFE3E8 }
+.ch .hd h1 { margin:2px 0; font-size:21pt } .ch .hd .s { color:#FFB39E; font-weight:700 } .ch .hd .m { font-size:9pt; color:#BFE3E8 }
+.ch h2 { font-size:13pt; color:#0E5E6F; margin:10px 0 4px; break-after:avoid } .ch p { margin:4px 0 }
+.ch .rctf { display:grid; grid-template-columns:34px 150px 1fr; border:1px solid #D5E3E6; border-radius:8px; overflow:hidden }
+.ch .rctf > div { padding:6px 8px; border-bottom:1px solid #D5E3E6 } .ch .rctf .l { color:#fff; font-weight:800; font-size:15pt; text-align:center; -webkit-print-color-adjust:exact; print-color-adjust:exact }
+.ch .rctf .e { color:#0E5E6F; font-style:italic } .ch small { color:#4E6871 }
+.ch .tk { background:#F4F8F9; border-radius:8px; padding:5px 10px 5px 40px; margin:4px 0; position:relative; break-inside:avoid; -webkit-print-color-adjust:exact; print-color-adjust:exact }
+.ch .tk b.n { position:absolute; left:12px; top:4px; font-size:18pt; color:#FF7A59 } .ch .tk i { color:#0E5E6F } .ch .tk .u { font-size:9pt; color:#4E6871 }
+.ch .two { display:grid; grid-template-columns:1fr 1fr; gap:14px } .ch ul { margin:4px 0 4px 18px; padding:0 } .ch li { margin:2px 0 }
+.ch .ex { background:#EAF4F6; border-radius:8px; padding:6px 10px; font-style:italic; color:#0E5E6F; margin:4px 0; break-inside:avoid; -webkit-print-color-adjust:exact; print-color-adjust:exact }
+.ch .flow { display:flex; gap:8px; align-items:stretch; margin:6px 0 } .ch .flow div { flex:1; border:1.5px solid #D5E3E6; border-radius:8px; padding:6px 8px; text-align:center } .ch .flow b { color:#FF7A59; display:block; font-size:9pt; letter-spacing:1px }
+.ch .mine { border:2px solid #FF7A59; border-radius:10px; padding:8px 12px; margin:8px 0; break-inside:avoid }
+.ch .blank { border-bottom:1px solid #B9C9CD; height:22px; margin:2px 0 6px } .ch .q { background:#0B2B33; color:#fff; border-radius:10px; padding:12px 16px; font-style:italic; margin-top:12px; break-inside:avoid; -webkit-print-color-adjust:exact; print-color-adjust:exact }
+.ch .pb { break-before:page }
+</style>
+</head>
+<body>
+<div id="gate" class="gate">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240" class="logo" style="height:64px;width:auto"><g transform="translate(10,10)"><g><path d="M30 0 H270 a30 30 0 0 1 30 30 V150 a30 30 0 0 1 -30 30 H80 L35 220 L45 180 H30 a30 30 0 0 1 -30 -30 V30 a30 30 0 0 1 30 -30 Z" fill="#0E5E6F"/>
+<text x="88" y="122" text-anchor="middle" font-family="&apos;Segoe UI&apos;, Arial, Helvetica, sans-serif" font-weight="800" font-size="96" fill="#FFFFFF" letter-spacing="-2">IA</text>
+<path d="M164 71 Q164 86 179 86 Q164 86 164 101 Q164 86 149 86 Q164 86 164 71 Z" fill="#FF7A59" opacity="1"/>
+<text x="208" y="122" text-anchor="middle" font-family="&apos;Segoe UI&apos;, Arial, Helvetica, sans-serif" font-weight="800" font-size="96" fill="#FFFFFF">F</text>
+<path d="M262 18 Q262 38 282 38 Q262 38 262 58 Q262 38 242 38 Q262 38 262 18 Z" fill="#FF7A59" opacity="1"/><path d="M286 61 Q286 70 295 70 Q286 70 286 79 Q286 70 277 70 Q286 70 286 61 Z" fill="#FF7A59" opacity=".75"/></g></g></svg>
+  <h1>Misiones IA·F: <span>Copilot y Power Automate</span></h1>
+  <p class="lead">Sigue el taller, prueba cada prompt en Copilot, crea tu primer flujo y gana <b>chispas ✦</b>. Sube de nivel hasta <b>Maestro IA·F</b>.</p>
+  <div class="levels" id="lvlChips"></div>
+  <label class="f" for="nick">Tu apodo</label>
+  <input type="text" id="nick" maxlength="20" placeholder="Por ejemplo: Chispa Veloz" autocomplete="off">
+  <div class="hint">Usa un apodo. Nada de nombres reales ni datos personales: el marcador lo ve toda la sala.</div>
+  <div class="err" id="nickErr"></div>
+  <button class="btn" id="enter" style="width:100%;margin-top:6px">Empezar las misiones</button>
+</div>
+
+<div id="app" class="hide">
+  <div class="top"><div class="in">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240" class="logo" style="height:40px;width:auto"><g transform="translate(10,10)"><g><path d="M30 0 H270 a30 30 0 0 1 30 30 V150 a30 30 0 0 1 -30 30 H80 L35 220 L45 180 H30 a30 30 0 0 1 -30 -30 V30 a30 30 0 0 1 30 -30 Z" fill="#FFFFFF"/>
+<text x="88" y="122" text-anchor="middle" font-family="&apos;Segoe UI&apos;, Arial, Helvetica, sans-serif" font-weight="800" font-size="96" fill="#0E5E6F" letter-spacing="-2">IA</text>
+<path d="M164 71 Q164 86 179 86 Q164 86 164 101 Q164 86 149 86 Q164 86 164 71 Z" fill="#FF7A59" opacity="1"/>
+<text x="208" y="122" text-anchor="middle" font-family="&apos;Segoe UI&apos;, Arial, Helvetica, sans-serif" font-weight="800" font-size="96" fill="#0E5E6F">F</text>
+<path d="M262 18 Q262 38 282 38 Q262 38 262 58 Q262 38 242 38 Q262 38 262 18 Z" fill="#FF7A59" opacity="1"/><path d="M286 61 Q286 70 295 70 Q286 70 286 79 Q286 70 277 70 Q286 70 286 61 Z" fill="#FF7A59" opacity=".75"/></g></g></svg>
+    <span class="live" id="live"><b></b>Marcador en vivo</span>
+    <div class="who"><span id="meName"></span><span class="pts">✦ <span id="mePts">0</span></span><span class="lvl" id="meLvl"></span></div>
+  </div><div class="bar"><i id="meBar"></i></div></div>
+  <div class="wrap">
+    <div class="tabs no-print"><button class="on" data-t="missions">Copilot <span class="tsc" id="tsC"></span></button><button data-t="pa">Power Automate <span class="tsc" id="tsP"></span></button><button data-t="board">Marcador</button><button id="rename" style="margin-left:auto">Cambiar apodo</button></div>
+    <div id="missions"><p class="lead">Van en el orden del taller. Abre una misión, copia el prompt, pruébalo en Copilot y marca lo que has hecho.</p><div id="mlist"></div></div>
+    <div id="pa" class="hide"><p class="lead">Tu robot sin código. Pídele a Copilot que te guíe con lo que has aprendido (RCTF) y crea tu primer flujo.</p><div id="plist"></div></div>
+    <div id="board" class="hide"><div class="scrhead"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240" class="logo" style="height:64px;width:auto"><g transform="translate(10,10)"><g><path d="M30 0 H270 a30 30 0 0 1 30 30 V150 a30 30 0 0 1 -30 30 H80 L35 220 L45 180 H30 a30 30 0 0 1 -30 -30 V30 a30 30 0 0 1 30 -30 Z" fill="#0E5E6F"/>
+<text x="88" y="122" text-anchor="middle" font-family="&apos;Segoe UI&apos;, Arial, Helvetica, sans-serif" font-weight="800" font-size="96" fill="#FFFFFF" letter-spacing="-2">IA</text>
+<path d="M164 71 Q164 86 179 86 Q164 86 164 101 Q164 86 149 86 Q164 86 164 71 Z" fill="#FF7A59" opacity="1"/>
+<text x="208" y="122" text-anchor="middle" font-family="&apos;Segoe UI&apos;, Arial, Helvetica, sans-serif" font-weight="800" font-size="96" fill="#FFFFFF">F</text>
+<path d="M262 18 Q262 38 282 38 Q262 38 262 58 Q262 38 242 38 Q262 38 262 18 Z" fill="#FF7A59" opacity="1"/><path d="M286 61 Q286 70 295 70 Q286 70 286 79 Q286 70 277 70 Q286 70 286 61 Z" fill="#FF7A59" opacity=".75"/></g></g></svg><div>Entra en <b id="scrUrl"></b><br><span style="font-size:20px;color:var(--grey)">Elige un apodo y empieza las misiones</span></div></div><h2 class="bt">Marcador <span id="sessName" style="color:var(--coral)"></span></h2><div class="card board" id="blist"></div>
+      <button class="btn sec no-print" id="bigscreen">Ver en pantalla grande</button></div>
+  </div>
+</div>
+<div id="printArea"></div>
+<div class="toast" id="toast"></div>
+<div class="banner" id="banner"><div class="bx"><div style="font-size:44px">✦</div><h2 id="bTitle"></h2><p id="bText" style="margin:0 0 14px"></p><button class="btn" id="bClose">¡Seguimos!</button></div></div>
+
+<script>
+// ---------- Datos ----------
+const LEVELS = [ {n:'Aprendiz', p:0}, {n:'Explorador', p:25}, {n:'Automatizador', p:50}, {n:'Maestro IA·F', p:80} ];
+const AREAS = [{"n": "Gestión económica y presupuestos", "d": {"h": ["Partida", "Presupuestado (€)", "Ejecutado a 30/09 (€)"], "r": [["Formación", "20.000", "17.500"], ["Viajes y dietas", "8.000", "2.100"], ["Material de oficina", "5.000", "4.900"], ["Publicidad institucional", "12.000", "3.600"]]}, "v": "Explícame esta tabla.", "r": "Actúa como técnico de presupuestos de una entidad pública. Te pego una tabla con datos ficticios de ejecución presupuestaria a 30 de septiembre. Lo leerá una persona sin formación económica. Calcula el porcentaje de ejecución de cada partida, indica cuáles van por encima o por debajo de lo esperable a estas alturas del año y qué conviene vigilar hasta diciembre. No inventes causas que no aparezcan en los datos. Formato: tabla con una columna nueva «% ejecutado» y debajo una nota de máximo 80 palabras.", "x": "Extra: «¿Qué fórmula de Excel uso para calcular el porcentaje de ejecución en la columna D? Explícamelo paso a paso.»"}, {"n": "Contratación", "d": {"h": ["Apartado del pliego", "Contenido"], "r": [["Solvencia económica", "Volumen anual de negocio de al menos 150.000 € en uno de los tres últimos años"], ["Solvencia técnica", "Al menos dos servicios similares en los últimos tres años"], ["Criterio 1", "Oferta económica: hasta 60 puntos"], ["Criterio 2", "Plan de trabajo: hasta 30 puntos"], ["Criterio 3", "Mejoras: hasta 10 puntos"], ["Plazo de ejecución", "6 meses"]]}, "v": "Resume este pliego.", "r": "Actúa como técnico de contratación pública. Te pego los datos principales de un pliego ficticio. Una empresa pequeña quiere saber si puede presentarse. Explica qué necesita acreditar, cómo se puntúa y qué parte pesa más en la valoración. Si algo no aparece en los datos, escribe «No consta». Formato: lista de comprobación con casillas (☐) para la empresa y una frase final con el criterio más importante.", "x": ""}, {"n": "Financiación e Inversiones", "d": {"h": ["Documento", "¿Obligatorio?", "Observaciones"], "r": [["Solicitud firmada", "Sí", "Modelo oficial"], ["Cuentas anuales", "Sí", "Último ejercicio cerrado"], ["Plan de inversión", "Sí", "Máximo 10 páginas"], ["Certificado de Hacienda", "Sí", "En vigor"], ["Certificado de Seguridad Social", "Sí", "En vigor"], ["Plazo", "—", "Hasta el 30 de noviembre"]]}, "v": "Escribe un correo con esto.", "r": "Actúa como técnico de una entidad pública que gestiona ayudas a empresas. Una empresa pregunta qué documentación debe presentar para una línea de préstamos. Usa solo los datos de esta tabla ficticia. Redacta la respuesta sin añadir requisitos que no aparezcan. Correo de máximo 150 palabras, tono cercano y profesional, con los documentos en lista y el plazo destacado.", "x": ""}, {"n": "Desarrollo e Innovación Empresarial", "d": {"h": ["Bloque", "Duración", "Quién"], "r": [["Bienvenida", "10 min", "Dirección"], ["Ponencia: digitalización básica", "30 min", "Ponente A"], ["Ponencia: ciberseguridad para pymes", "30 min", "Ponente B"], ["Mesa redonda", "40 min", "Tres pymes aragonesas"], ["Cierre y networking", "10 min", "Organización"]]}, "v": "Hazme un programa con esto.", "r": "Actúa como organizador de jornadas para empresas en una entidad pública. Te pego los bloques de una jornada ficticia que empieza a las 10:00. Propón el programa con horarios y un texto de difusión para la web. Formato: tabla con hora de inicio, actividad y quién; debajo, texto de difusión de máximo 80 palabras. Evita palabras como «revolucionario» o «disruptivo».", "x": ""}, {"n": "Gabinete de Dirección y Secretaría", "d": {"h": ["Dato", "Valor"], "r": [["Reunión", "Coordinación con responsables de área"], ["Fecha", "Martes 10 de noviembre"], ["Hora", "9:30"], ["Lugar", "Sala de juntas"], ["Duración", "1 hora"], ["Puntos", "Seguimiento de proyectos · Presupuesto · Formación · Ruegos y preguntas"]]}, "v": "Escribe una convocatoria.", "r": "Actúa como secretaria de dirección de un organismo público. Te pego los datos ficticios de una reunión que convoca el director. Redacta la convocatoria con el orden del día numerado y pide confirmación de asistencia antes del viernes. Formato: asunto y cuerpo de máximo 120 palabras, tono formal y cordial.", "x": ""}, {"n": "Patrimonio y Jurídica", "d": {"h": ["Bien", "Valor (€)", "Fecha de compra", "¿Inventariado?"], "r": [["Portátil", "1.200", "15/09", "No"], ["Proyector sala de actos", "3.800", "02/09", "No"], ["Sillas (10 unidades)", "900", "20/08", "No"], ["Servidor", "7.500", "10/07", "Sí"]]}, "v": "¿Qué hago con esto?", "r": "Actúa como asesor jurídico de un organismo público. Norma interna ficticia: «Los bienes muebles cuyo valor unitario supere los 3.000 euros deberán inscribirse en el inventario en el plazo de un mes desde su adquisición». Hoy es 30 de septiembre. Revisa la tabla de bienes y dime cuáles deben inscribirse, cuáles no y si alguno está fuera de plazo. No supongas nada que no esté en la norma o en la tabla. Formato: tabla con las columnas Bien · ¿Debe inventariarse? · Motivo, y una frase de resumen.", "x": "Con normas reales: usa solo textos ya publicados (BOA, BOE) y comprueba siempre el resultado con el original."}, {"n": "Prospectiva", "d": {"h": ["Indicador (ficticio)", "2023", "2024", "2025"], "r": [["Empresas agroalimentarias", "1.050", "1.080", "1.120"], ["Exportaciones (M€)", "2.300", "2.450", "2.400"], ["Empleo (miles)", "18,2", "18,9", "19,4"], ["Inversión en I+D (M€)", "41", "47", "55"]]}, "v": "Analiza estos datos.", "r": "Actúa como analista de prospectiva económica. Te pego una tabla con datos ficticios del sector agroalimentario. Prepara una lectura para el comité de dirección: tendencia de cada indicador, una posible señal de alerta y dos preguntas que habría que investigar. No inventes cifras ni causas: si algo requiere más datos, dilo. Formato: tabla Indicador · Tendencia · Lectura, y debajo la alerta y las dos preguntas.", "x": ""}, {"n": "Recepción", "d": {"h": ["Planta", "Área", "Horario de atención"], "r": [["Planta baja", "Recepción e información", "8:00 – 15:00"], ["Planta 1", "Contratación", "9:00 – 14:00"], ["Planta 2", "Financiación e Inversiones", "9:00 – 14:00"], ["Planta 3", "Dirección", "Con cita previa"]]}, "v": "Escribe un cartel con esto.", "r": "Actúa como personal de recepción de un organismo público. Te pego una tabla ficticia con las plantas y áreas del edificio. Redacta un mensaje de bienvenida y orientación para las visitas y tradúcelo al inglés. Formato: dos versiones (español e inglés), máximo 60 palabras cada una, tono amable, con las plantas en lista.", "x": ""}, {"n": "Planificación y Proyectos", "d": {"h": ["Tarea", "Área", "Semanas estimadas"], "r": [["Definir requisitos del formulario", "Unidad gestora", "2"], ["Desarrollar el formulario web", "Informática", "3"], ["Pruebas con usuarios", "Unidad gestora + Informática", "1"], ["Textos y difusión", "Comunicación", "1"], ["Puesta en marcha", "Informática", "1"]]}, "v": "Hazme un plan con esto.", "r": "Actúa como jefe de proyectos en la administración pública. Te pego las tareas ficticias para lanzar un formulario web en 8 semanas. Ordénalas en un cronograma, señala qué tareas pueden hacerse en paralelo, los hitos y los 3 riesgos principales. Si con estas tareas no se llega a 8 semanas, dilo. Formato: tabla por semanas (Semana · Tarea · Área · Hito) y debajo los riesgos con una medida para cada uno.", "x": ""}, {"n": "Recursos Humanos", "d": {"h": ["Dato", "Valor"], "r": [["Área de destino", "Contratación"], ["Primer día", "Lunes [fecha]"], ["Hora de llegada", "8:30"], ["Persona de contacto", "[responsable del área]"], ["Equipo", "El portátil lo entrega Informática"], ["Formación inicial", "Prevención de riesgos y protección de datos"]]}, "v": "Escribe un correo de bienvenida.", "r": "Actúa como técnico de recursos humanos. Te pego los datos ficticios de una nueva incorporación (sin nombres ni datos personales). Redacta un correo de bienvenida con la información práctica del primer día. Mantén los huecos entre corchetes tal cual. Máximo 120 palabras, tono cálido y profesional.", "x": ""}];
+const AYUDA = 'Hola: me gustaría saber qué documentación tengo que presentar para pedir un préstamo para mi empresa y hasta cuándo hay plazo. Gracias.';
+const MISSIONS = [
+ { id:'m1', k:'Diapositiva 6', t:'Calentamiento', lead:'Antes de aprender nada: escribe esto tal cual en Copilot y mira qué te devuelve. ¿Lo enviarías sin tocar?',
+   blocks:[{type:'vaga', h:'PROMPT VAGO', text:'Escríbeme un correo para una reunión.'}],
+   checks:[{id:'a', t:'Lo he probado en Copilot', p:5}] },
+ { id:'m2', k:'Diapositivas 10 a 12', t:'La misma tarea, dos instrucciones', lead:'Mismo texto, misma herramienta. Fíjate en tres cosas: longitud, estructura y si lo entregarías sin tocar.',
+   blocks:[{type:'', h:'CORREO RECIBIDO (FICTICIO)', text:AYUDA},
+           {type:'vaga', h:'PRUEBA 1 · VAGO', text:'Contesta a este correo.\n\n'+AYUDA},
+           {type:'rctf', h:'PRUEBA 2 · RCTF', text:'Actúa como técnico de una entidad pública que gestiona ayudas a empresas. Una empresa pregunta qué documentación debe presentar para un préstamo (usa estos datos ficticios: solicitud firmada, últimas cuentas anuales, plan de inversión y certificados de estar al corriente con Hacienda y Seguridad Social; plazo hasta el 30 de noviembre). Redacta la respuesta sin añadir requisitos que no te haya dado. Correo de máximo 150 palabras, tono cercano y profesional, con los documentos en lista.\n\n'+AYUDA}],
+   checks:[{id:'a', t:'He comparado las dos respuestas', p:5}] },
+ { id:'m3', k:'Diapositiva 13', t:'Cuatro trucos que lo cambian todo', lead:'Pruébalos sobre la respuesta de la misión anterior, en la misma conversación.',
+   blocks:[{type:'', h:'1 · CONVERSA', text:'Hazlo más corto: máximo 60 palabras.'},
+           {type:'', h:'2 · DILE QUÉ NO QUIERES', text:'Si algún dato no lo sabes, no lo inventes: escribe [COMPLETAR] en su lugar.'},
+           {type:'', h:'3 · QUE TE PREGUNTE', text:'Quiero convocar una reunión de mi área y necesito un correo. Antes de responder, hazme las preguntas que necesites, de una en una.'},
+           {type:'', h:'4 · QUE MEJORE TU INSTRUCCIÓN', text:'Mejora este prompt para obtener un resultado más útil. Dime qué le falta (rol, contexto, tarea o formato) y devuélvemelo reescrito: «Escríbeme un correo para una reunión.»'}],
+   checks:[{id:'a', t:'Truco 1 probado', p:3},{id:'b', t:'Truco 2 probado', p:3},{id:'c', t:'Truco 3 probado', p:3},{id:'d', t:'Truco 4 probado', p:3}] },
+ { id:'m4', k:'Diapositiva 14', t:'La regla del tablón', lead:'Si no lo publicarías en un tablón público, no lo pegues en la IA. ¿Qué harías con cada texto?', quiz:[
+   ['Una convocatoria de ayudas ya publicada en el BOA.', true, 'Es pública: puedes usarla.'],
+   ['Un Excel de solicitantes con NIF e IBAN.', false, 'Datos personales y bancarios: nunca.'],
+   ['Un expediente de préstamo todavía en tramitación.', false, 'Información no pública de una empresa.'],
+   ['Una nota de prensa ya publicada en la web del IAF.', true, 'Es pública: adelante.'],
+   ['Un informe médico de un compañero.', false, 'Datos de salud: categoría especial del RGPD.'],
+   ['Una plantilla de correo sin nombres ni datos.', true, 'Sin datos personales: sin problema.'] ] },
+ { id:'m5', k:'Diapositiva 15 · 15 min', t:'Actividad 1 · Tu ficha de área', lead:'Elige tu área. Prueba primero el prompt vago, después el RCTF, y compara.', area:true,
+   checks:[{id:'a', t:'Rol: dije quién debía ser la IA', p:2},{id:'b', t:'Contexto: situación y destinatario', p:2},{id:'c', t:'Tarea: qué tenía que hacer', p:2},{id:'d', t:'Formato: extensión, estructura y tono', p:2},{id:'e', t:'He comparado vago y RCTF', p:10}] },
+ { id:'m6', k:'Bonus', t:'Tu propio prompt de trabajo', lead:'Piensa en una tarea real que repitas a menudo (sin datos personales). Rellena las cuatro piezas y la app te monta el prompt.', builder:true,
+   checks:[{id:'a', t:'He creado y probado mi prompt', p:10}] },
+ { id:'m10', tab:'p', k:'Diapositivas 16 a 18', t:'Pídele a Copilot que te guíe', lead:'Usa lo que has aprendido: copia este prompt RCTF en Copilot y deja que te explique cómo crear el flujo. Si un nombre de menú no coincide con lo que ves, compruébalo: Copilot también se equivoca.',
+   blocks:[{type:'rctf', h:'PROMPT RCTF · TU PRIMER FLUJO', text:'Actúa como experto en Power Automate que enseña a personas sin conocimientos técnicos. Trabajo en una entidad pública con licencia estándar de Microsoft 365 (sin conectores premium ni AI Builder). Quiero crear un flujo de nube automatizado que, cuando llegue a mi Outlook un correo con el asunto «PRUEBA IAF» y un archivo adjunto, guarde ese adjunto en la carpeta /Adjuntos IAF de mi OneDrive para la Empresa y me avise por Teams. Dame los pasos numerados, uno por línea, con el nombre del disparador y de cada acción tal como aparecen en Power Automate en español. Si no estás seguro del nombre exacto de un menú, dilo en lugar de inventarlo. Termina con cómo probarlo y qué revisar si no funciona.'}],
+   checks:[{id:'a', t:'Copilot me ha dado los pasos', p:3},{id:'b', t:'He detectado algo que no coincidía y lo he comprobado', p:3, free:true}] },
+ { id:'m7', tab:'p', k:'Diapositiva 19 · 15 min', t:'Actividad 2 · Tu primer flujo', lead:'Que los adjuntos de tus correos de prueba se guarden solos en OneDrive. Ve marcando cada paso.',
+   blocks:[{type:'', h:'ASUNTO PARA EL FILTRO', text:'PRUEBA IAF'}, {type:'', h:'CARPETA DE ONEDRIVE', text:'/Adjuntos IAF'}],
+   steps:true,
+   checks:[{id:'a', t:'1 · He entrado y creado un flujo de nube automatizado', p:3, free:true},{id:'b', t:'2 · Disparador «Cuando llega un correo electrónico nuevo (V3)»', p:3, free:true},{id:'c', t:'3 · Filtro: solo con adjuntos y asunto PRUEBA IAF', p:3},{id:'d', t:'4 · Acción OneDrive «Crear archivo»', p:3},{id:'e', t:'5 · Me he enviado el correo y el adjunto está en OneDrive', p:3, free:true},{id:'f', t:'BONUS · He añadido el aviso en Teams', p:10, free:true}] },
+ { id:'m11', tab:'p', k:'Bonus', t:'Tu propia automatización', lead:'¿Qué tarea repetitiva te gustaría quitarte de encima? Rellena los datos (sin datos personales), copia el prompt y pregúntale a Copilot si se puede hacer con nuestra licencia.', pabuilder:true,
+   checks:[{id:'a', t:'He preguntado a Copilot por mi automatización', p:5}] },
+ { id:'m9', tab:'p', k:'Voluntario · anónimo', t:'Buzón: ¿qué te quita más tiempo?', lead:'Cuéntanos qué tarea de tu día a día es la más pesada, repetitiva o molesta. Nos ayudará a preparar los próximos talleres y a buscar qué automatizar. Es anónimo: no se guarda tu apodo.', mailbox:true,
+   checks:[] },
+ { id:'m8', tab:'p', k:'Diapositiva 20', t:'Tu chuleta para llevar', lead:'Dos páginas con todo lo del taller y tu parte personal: tu prompt de área, tu prompt de trabajo y una plantilla en blanco. Guárdala en PDF.', sheet:true,
+   checks:[{id:'a', t:'Ya tengo mi chuleta', p:10, free:true}] }
+];
+const MAXP = 5 + MISSIONS.reduce((s,m)=> s + (m.checks||[]).reduce((a,c)=>a+c.p,0) + (m.quiz? m.quiz.length:0), 0);
+
+// ---------- Estado ----------
+const qs = new URLSearchParams(location.search);
+const SESSION = (qs.get('s') || 'taller').replace(/[^a-z0-9_-]/gi,'').slice(0,30) || 'taller';
+const LIVE = !!FIREBASE_DB_URL;
+const store = { get(k,d){ try{ const v=localStorage.getItem('iaf_'+SESSION+'_'+k); return v===null? d : JSON.parse(v) }catch(e){ return d } },
+                set(k,v){ try{ localStorage.setItem('iaf_'+SESSION+'_'+k, JSON.stringify(v)) }catch(e){} } };
+let S = store.get('state', { id: null, name: '', done:{}, copied:{}, quiz:{}, area:'', builder:{r:'',c:'',t:'',f:''} });
+if (!S.id) { S.id = 'p' + Math.random().toString(36).slice(2,10) + Date.now().toString(36); }
+const save = () => store.set('state', S);
+
+function points(){ let p=(S.mail&&S.mail.length)?5:0; MISSIONS.forEach(m=>{ (m.checks||[]).forEach(c=>{ if(S.done[m.id+c.id]) p+=c.p }); if(m.quiz) m.quiz.forEach((q,i)=>{ if(S.quiz[m.id+i]===q[1]) p+=1 }) }); return p }
+function level(p){ let l=LEVELS[0]; LEVELS.forEach(x=>{ if(p>=x.p) l=x }); return l }
+function nextLevel(p){ return LEVELS.find(x=>x.p>p) }
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+// ---------- Backend (Firebase Realtime Database vía REST) ----------
+const API = LIVE ? FIREBASE_DB_URL.replace(/\/$/,'') + '/sesiones/' + SESSION + '/jugadores' : null;
+async function fetchPlayers(){ if(!LIVE) return null; try{ const r = await fetch(API + '.json', {cache:'no-store'}); if(!r.ok) throw 0; const d = await r.json() || {}; setLive(true); return d }catch(e){ setLive(false); return null } }
+async function pushMe(){ if(!LIVE || !S.name) return; const p=points(); try{ await fetch(API + '/' + S.id + '.json', {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({n:S.name, p, t:Date.now()})}); setLive(true) }catch(e){ setLive(false) } }
+function setLive(ok){ const el=$('#live'); if(!el) return; el.classList.toggle('off', !ok); el.lastChild.textContent = LIVE ? (ok? 'Marcador en vivo' : 'Sin conexión: tus puntos se guardan en este dispositivo') : 'Sin marcador compartido'; }
+
+// ---------- Entrada ----------
+$('#lvlChips').innerHTML = LEVELS.map(l=>`<span>${esc(l.n)} · ${l.p} ✦</span>`).join('');
+function badNick(n){ if(n.length<2) return 'Escribe al menos 2 caracteres.'; if(/@/.test(n)) return 'No uses tu correo: elige un apodo.'; if(/\d{6,}/.test(n)) return 'Nada de números largos (DNI, teléfono…).'; return '' }
+async function enter(){
+  const n = $('#nick').value.trim().replace(/\s+/g,' '); const bad = badNick(n); if(bad){ $('#nickErr').textContent=bad; return }
+  const players = await fetchPlayers();
+  if (players) { const taken = Object.entries(players).some(([id,v])=> id!==S.id && v && String(v.n).toLowerCase()===n.toLowerCase()); if(taken){ $('#nickErr').textContent='Ese apodo ya está en uso. Prueba con otro.'; return } }
+  S.name = n; save(); start();
+}
+$('#enter').onclick = enter; $('#nick').addEventListener('keydown', e=>{ if(e.key==='Enter') enter() });
+$('#rename').onclick = ()=>{ $('#app').classList.add('hide'); $('#gate').classList.remove('hide'); $('#nick').value=S.name; $('#nick').focus() };
+
+// ---------- Interfaz ----------
+function header(){ const p=points(), l=level(p), nx=nextLevel(p); $('#meName').textContent=S.name; $('#mePts').textContent=p; $('#meLvl').textContent=l.n.toUpperCase();
+  $('#meBar').style.width = Math.min(100, p/LEVELS[3].p*100)+'%'; }
+function mScore(m){ let got=0,tot=0; if(m.mailbox){ return [(S.mail&&S.mail.length)?5:0, 5] } (m.checks||[]).forEach(c=>{ tot+=c.p; if(S.done[m.id+c.id]) got+=c.p }); if(m.quiz) m.quiz.forEach((q,i)=>{ tot+=1; if(S.quiz[m.id+i]===q[1]) got+=1 }); return [got,tot] }
+function blockHtml(m,b,i){ return `<div class="blk ${b.type}"><div class="bh">${esc(b.h)}<button class="cp" data-m="${m.id}" data-i="${i}">Copiar</button></div><pre>${esc(b.text)}</pre></div>` }
+const tsv = d => [d.h, ...d.r].map(r=>r.join('\t')).join('\n');
+function xlsHtml(d){ const L='ABCDEFGH'; return `<div class="xls"><div class="xbar"><span class="xic">X</span>datos_ficticios.xlsx</div><table><tr><th class="rn"></th>${d.h.map((_,i)=>`<th class="cl">${L[i]}</th>`).join('')}</tr><tr><td class="rn">1</td>${d.h.map(h=>`<td class="hd">${esc(h)}</td>`).join('')}</tr>${d.r.map((r,j)=>`<tr><td class="rn">${j+2}</td>${r.map((c,i)=>`<td class="${/^[\d.,–—\s:]+$/.test(c)&&i>0?'num':''}">${esc(c)}</td>`).join('')}</tr>`).join('')}</table></div>` }
+function areaHtml(m){ const a = AREAS.find(x=>x.n===S.area);
+  return `<label class="f" for="areaSel">Tu área</label><select id="areaSel"><option value="">Elige tu área…</option>${AREAS.map(x=>`<option ${x.n===S.area?'selected':''}>${esc(x.n)}</option>`).join('')}</select>` +
+   (a ? `<p class="hint" style="margin-top:12px"><b>Datos de trabajo (ficticios).</b> Al pulsar «Copiar», se copia el prompt junto con esta tabla.</p>` + xlsHtml(a.d) + blockHtml(m,{type:'vaga',h:'PROMPT VAGO + TABLA',text:a.v},'av') + blockHtml(m,{type:'rctf',h:'PROMPT RCTF + TABLA',text:a.r},'ar') + (a.x? `<p class="hint">${esc(a.x)}</p>`:'') : '') }
+function builderText(){ const b=S.builder; return `Actúa como ${b.r||'[rol]'}. ${b.c||'[contexto: situación y para quién es]'}. ${b.t||'[tarea: qué tiene que hacer]'}. Si algún dato no lo sabes, no lo inventes. Formato: ${b.f||'[extensión, estructura y tono]'}.` }
+function paText(){ const b=S.pa||{}; return `Actúa como experto en Power Automate que enseña a personas sin conocimientos técnicos. Trabajo en ${b.a||'[tu área]'} de una entidad pública con licencia estándar de Microsoft 365 (sin conectores premium). Cada ${b.f||'[día / semana / mes]'} hago esta tarea a mano: ${b.t||'[describe la tarea, sin datos personales]'}. ¿Se puede automatizar con conectores estándar (Outlook, Teams, OneDrive, SharePoint, Forms, Planner, Excel)? Si se puede, explícame el flujo: disparador, acciones y pasos numerados. Si no se puede o necesita una licencia de pago, dímelo claramente. No inventes nombres de menús.` }
+function paHtml(m){ const b=S.pa||{};
+  return `<label class="f">Tu área</label><select data-pa="a"><option value="">Elige…</option>${AREAS.map(x=>`<option ${x.n===b.a?'selected':''}>${esc(x.n)}</option>`).join('')}</select>
+  <label class="f">¿Cada cuánto la haces?</label><input type="text" data-pa="f" value="${esc(b.f||'')}" placeholder="semana">
+  <label class="f">¿Qué tarea es?</label><input type="text" data-pa="t" value="${esc(b.t||'')}" placeholder="guardo los adjuntos de los correos de un proveedor en una carpeta y aviso a mi compañera">
+  <div class="blk rctf"><div class="bh">TU PROMPT DE AUTOMATIZACIÓN<button class="cp" data-m="${m.id}" data-i="pb">Copiar</button></div><pre id="paOut">${esc(paText())}</pre></div>` }
+function builderHtml(m){ const b=S.builder; const f=(k,l,ph)=>`<label class="f"><b>${l[0]}</b>${l.slice(1)}</label><input type="text" data-b="${k}" value="${esc(b[k])}" placeholder="${esc(ph)}">`;
+  return f('r','Rol: ¿quién debe ser la IA?','técnico de contratación de un organismo público') + f('c','Contexto: ¿qué situación hay y para quién es?','Lo leerá el equipo de mi área, que no conoce el tema') + f('t','Tarea: ¿qué tiene que hacer?','Resume los puntos clave y los plazos') + f('f','Formato: ¿cómo lo quieres?','máximo 120 palabras, en viñetas, tono claro') +
+   `<div class="blk rctf"><div class="bh">TU PROMPT<button class="cp" data-m="${m.id}" data-i="b">Copiar</button></div><pre id="bOut">${esc(builderText())}</pre></div>` }
+function stepsHtml(){ return `<ol class="steps"><li>Entra en <b>make.powerautomate.com</b> con tu cuenta del IAF → <b>Crear</b> → <b>Flujo de nube automatizado</b>. Nombre: «Mis adjuntos de prueba».</li><li>Disparador: <b>«Cuando llega un correo electrónico nuevo (V3)»</b> (Office 365 Outlook).</li><li>En sus opciones avanzadas: <b>Solo con datos adjuntos</b> = Sí · <b>Incluir datos adjuntos</b> = Sí · <b>Filtro de asunto</b> = PRUEBA IAF.</li><li>Nueva acción: <b>OneDrive para la Empresa → Crear archivo</b>. Carpeta: /Adjuntos IAF · Nombre: «Nombre de datos adjuntos» · Contenido: «Contenido de datos adjuntos».</li><li><b>Guardar → Probar → Manualmente</b> y envíate un correo con asunto PRUEBA IAF y un adjunto.</li></ol><p class="hint"><b>Bonus:</b> acción de Teams «Publicar mensaje en un chat o canal» → Publicar como: bot de Flow → Mensaje: «Ha llegado un adjunto: [Asunto]». ¿Solo tienes móvil? Hazlo en pareja.</p>` }
+function mailboxHtml(){ const sent = S.mail||[];
+  return `<label class="f" for="mbArea">Tu área</label><select id="mbArea"><option value="">Prefiero no decirlo</option>${AREAS.map(x=>`<option ${x.n===S.area?'selected':''}>${esc(x.n)}</option>`).join('')}</select>
+  <label class="f" for="mbText">¿Qué es lo que más te molesta o te quita más tiempo?</label><textarea id="mbText" maxlength="400" placeholder="Por ejemplo: cada semana copio a mano los datos de los correos a un Excel…"></textarea>
+  <p class="hint">Sin nombres, NIF, correos ni datos de expedientes. Máximo 400 caracteres.</p><div class="err" id="mbErr"></div>
+  <button class="btn sec" id="mbSend">${LIVE?'Enviar al buzón':'Guardar mi idea'}</button>${sent.length?`<p class="hint">✔ Has enviado ${sent.length} ${sent.length>1?'ideas':'idea'}. ¡Gracias!</p>`:''}${LIVE?'':'<p class="hint">Sin marcador conectado, tu idea queda en tu chuleta para que se la cuentes a Informática.</p>'}` }
+async function sendMail(){ const txt=$('#mbText').value.trim(), area=$('#mbArea').value; const err=$('#mbErr');
+  if(txt.length<5){ err.textContent='Escribe un poco más.'; return } if(/@|\d{6,}|\b\d{8}[A-Za-z]\b/.test(txt)){ err.textContent='Parece que hay un correo o un número de identificación. Quítalo, por favor.'; return }
+  let ok=true; if(LIVE){ try{ const r=await fetch(FIREBASE_DB_URL.replace(/\/$/,'')+'/sesiones/'+SESSION+'/buzon.json',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({a:area||'Sin indicar', txt, t:Date.now()})}); ok=r.ok }catch(e){ ok=false } }
+  if(!ok){ err.textContent='No se ha podido enviar. Inténtalo de nuevo.'; return }
+  const before=points(); S.mail=(S.mail||[]).concat([{a:area,txt}]); save(); toast('¡Gracias! Idea recibida.'); sparks($('#mbSend'),5); afterChange(before) }
+function chuletaDoc(){ const a=AREAS.find(x=>x.n===S.area); const logo=(document.querySelector('.top svg')||{outerHTML:''}).outerHTML; const hasB=S.builder.r||S.builder.t; const mail=S.mail||[];
+  const R=[['R','#0E5E6F','ROL','¿Quién debe ser?','Actúa como técnico de una entidad pública que gestiona ayudas a empresas.'],['C','#13707F','CONTEXTO','¿Qué situación hay?','Una empresa pregunta qué documentos debe presentar. Lo leerá alguien sin experiencia.'],['T','#FF7A59','TAREA','¿Qué tiene que hacer?','Redacta la respuesta con la lista de documentos y el plazo. No inventes requisitos.'],['F','#C9871F','FORMATO','¿Cómo lo quieres?','Correo de máximo 150 palabras, tono cercano, documentos en lista.']];
+  return `<div class="ch"><div class="hd">${logo}<div><div class="k">IA·F · IA FÁCIL PARA TODOS</div><h1>Chuleta: Copilot y Power Automate</h1><div class="s">La IA que ya tenemos, aplicada al día a día</div><div class="m">Instituto Aragonés de Fomento · Área de Servicios Informáticos${S.name?' · '+esc(S.name):''}</div></div></div>
+  <h2>1. La fórmula RCTF</h2><p>Si le das poco, te devuelve lo más probable, y lo más probable es lo más genérico. Dale cuatro piezas:</p>
+  <div class="rctf">${R.map(r=>`<div class="l" style="background:${r[1]}">${r[0]}</div><div><b>${r[2]}</b><br><small>${r[3]}</small></div><div class="e">${r[4]}</div>`).join('')}</div>
+  <h2>2. Cuatro trucos que lo cambian todo</h2>
+  <div class="tk"><b class="n">1</b><b>Conversa.</b> Si no te convence, no empieces de cero: pide cambios sobre lo que ya tienes.<br><i>«Más corto.» «Más formal.» «Quita el último párrafo.»</i><div class="u"><b>Úsalo cuando:</b> casi siempre. El primer resultado rara vez es el definitivo.</div></div>
+  <div class="tk"><b class="n">2</b><b>Dile qué NO quieres.</b> Es el antídoto contra los inventos: «lo que no sé, me lo imagino».<br><i>«Si algún dato no lo sabes, no lo inventes: escribe [COMPLETAR].»</i><div class="u"><b>Úsalo cuando:</b> trabajas con cifras, normas, plazos o nombres.</div></div>
+  <div class="tk"><b class="n">3</b><b>Que te pregunte.</b> Deja que la IA detecte lo que le falta antes de responder.<br><i>«Antes de responder, hazme las preguntas que necesites, de una en una.»</i><div class="u"><b>Úsalo cuando:</b> la tarea es nueva o no tienes claro qué contexto necesita.</div></div>
+  <div class="tk"><b class="n">4</b><b>Que mejore tu instrucción (meta-prompting).</b> Usa la IA para escribir y mejorar tus propios prompts.<br><i>«Mejora este prompt para obtener un resultado más útil. Dime qué le falta (rol, contexto, tarea o formato) y devuélvemelo reescrito: [tu prompt]»</i><div class="u"><b>Úsalo cuando:</b> repites una tarea a menudo y quieres un prompt reutilizable.</div></div>
+  <h2>3. Cuando trabajas con tablas, documentos o imágenes</h2>
+  <ul><li><b>Tablas de Excel:</b> selecciona las celdas, copia y pégalas debajo del prompt. Pide que no invente cifras y comprueba siempre los cálculos.</li><li><b>Documentos largos:</b> di qué partes te interesan y en qué formato quieres el resultado (tabla, lista, resumen de N palabras).</li><li><b>Fotos o escaneos:</b> pide primero la transcripción, que marque [ilegible] lo que no pueda leer, y después la tarea.</li></ul>
+  <div class="ex">«Te pego una tabla con datos de ejecución presupuestaria. Calcula el porcentaje ejecutado de cada partida y señala las que van por debajo del 50 %. No inventes causas. Formato: tabla con una columna nueva y una nota de 80 palabras.»</div>
+  <h2 class="pb">4. Copilot en el IAF</h2>
+  <div class="two"><div><ul><li>Entra siempre con tu <b>cuenta del IAF</b>: verás el indicador de <b>protección de datos empresarial</b>.</li><li>Lo tienes en la <b>app de Microsoft 365 Copilot</b>, en el navegador y en <b>Outlook</b>.</li><li>Copilot dentro de Word, Excel y PowerPoint necesita licencia de pago: copia el texto en Copilot Chat y trabaja desde ahí.</li></ul></div>
+  <div><ul><li><b>Tu biblioteca de prompts:</b> cuando uno te funcione, guárdalo en OneNote, un Word o una nota de Teams.</li><li>La próxima vez cambia solo los datos.</li><li>En pocas semanas tendrás tu propia colección.</li></ul></div></div>
+  <h2>5. Power Automate en un minuto</h2>
+  <div class="flow"><div><b>CUANDO</b>llega un correo con adjunto</div><div><b>ENTONCES</b>guarda el adjunto en OneDrive</div><div><b>Y ADEMÁS</b>te avisa por Teams</div></div>
+  <div class="two"><div><b>Tu primer flujo</b><ol style="margin:4px 0 4px 18px;padding:0"><li>make.powerautomate.com → Crear → Flujo de nube automatizado.</li><li>Disparador: «Cuando llega un correo electrónico nuevo (V3)».</li><li>Filtro: solo con adjuntos y asunto concreto.</li><li>Acción: OneDrive → «Crear archivo».</li><li>Guardar → Probar. Desactívalo en «Mis flujos» si no lo usas.</li></ol></div>
+  <div><b>Ideas para empezar</b><ul><li>Facturas del correo → carpeta de OneDrive.</li><li>Correo de un remitente concreto → aviso en Teams.</li><li>Formulario de Forms → Excel + correo de confirmación.</li><li>Cada viernes → recordatorio automático.</li><li>Tarea completada en Planner → aviso en Teams.</li></ul></div></div>
+  <h2>6. Antes de pegar y antes de usar</h2>
+  <div class="two"><div><b>La regla del tablón</b><p><i>«Si no lo publicarías en un tablón público, no lo pegues en la IA.»</i></p><b>No pegues:</b><ul><li>DNI/NIE, nombres, teléfonos, direcciones.</li><li>IBAN y datos bancarios.</li><li>Datos de empresas o expedientes en tramitación.</li><li>Salud u otras categorías especiales.</li></ul></div>
+  <div><b>Revisa siempre lo que devuelve</b><ul><li>¿Las cifras y fechas coinciden con el original?</li><li>¿Ha añadido algo que no estaba?</li><li>¿Los nombres y cargos son correctos?</li><li>¿Lo firmarías tú tal cual?</li></ul><p><b>Si usas IA en un documento, dilo.</b> La IA se equivoca y la responsabilidad es nuestra.</p></div></div>
+  <h2>7. Lo mío</h2>
+  ${a?`<div class="mine"><b>Mi prompt de área · ${esc(a.n)}</b><p>${esc(a.r)}</p></div>`:''}
+  ${hasB?`<div class="mine"><b>Mi prompt de trabajo</b><p>${esc(builderText())}</p></div>`:''}
+  ${(S.pa&&S.pa.t)?`<div class="mine"><b>Mi prompt de automatización</b><p>${esc(paText())}</p></div>`:''}${mail.length?`<div class="mine"><b>Lo que me gustaría automatizar</b>${mail.map(x=>`<p>${esc(x.txt)}</p>`).join('')}</div>`:''}
+  <div class="mine" style="border-color:#0E5E6F"><b>Plantilla en blanco para mi próximo prompt</b>${['R · Actúa como…','C · La situación es… y lo leerá…','T · Necesito que…  (No inventes lo que no sepas.)','F · Formato: extensión, estructura y tono…'].map(l=>`<p style="margin-top:8px"><small>${l}</small></p><div class="blank"></div>`).join('')}</div>
+  <div class="q">«No tenemos la IA para que piense por nosotros. La tenemos para que haga lo que nosotros pensamos.»</div></div>` }
+function chuletaResumen(){ const a=AREAS.find(x=>x.n===S.area); return ['CHULETA IA·F · Copilot y Power Automate','RCTF: Rol · Contexto · Tarea · Formato.','Trucos: conversa · dile qué NO quieres · que te pregunte · que mejore tu instrucción.','Regla del tablón: si no lo publicarías en un tablón público, no lo pegues en la IA. Revisa siempre y, si usas IA, dilo.','Power Automate: CUANDO pasa algo → ENTONCES el robot actúa.', a?('Mi prompt de área ('+a.n+'): '+a.r):'', (S.builder.r||S.builder.t)?('Mi prompt de trabajo: '+builderText()):''].filter(Boolean).join('\n\n') }
+function sheetHtml(){ const a=AREAS.find(x=>x.n===S.area); return `<ul><li>La fórmula RCTF con un ejemplo del IAF.</li><li>Los cuatro trucos, con cuándo usar cada uno.</li><li>Cómo trabajar con tablas, documentos e imágenes.</li><li>Copilot en el IAF y tu biblioteca de prompts.</li><li>Power Automate en un minuto: tu primer flujo e ideas.</li><li>La regla del tablón y qué revisar siempre.</li><li><b>Lo tuyo:</b> ${a?'tu prompt de área, ':''}${(S.builder.r||S.builder.t)?'tu prompt de trabajo, ':''}${(S.mail||[]).length?'tus ideas para automatizar, ':''}y una plantilla en blanco.</li></ul><div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn sec" id="printSheet">Descargar chuleta (PDF)</button><button class="btn" style="background:#fff;color:var(--teal);border:1.5px solid var(--teal)" id="copySheet">Copiar resumen</button></div><p class="hint">En «Descargar», elige <b>Guardar como PDF</b> como impresora.</p>` }
+
+function render(){
+  header();
+  const cardHtml = m=>{ const [g,t]=mScore(m); const open = openSet.has(m.id);
+    let body = `<p class="lead">${esc(m.lead)}</p>`;
+    if(m.area) body += areaHtml(m);
+    if(m.builder) body += builderHtml(m);
+    if(m.pabuilder) body += paHtml(m);
+    if(m.steps) body += stepsHtml();
+    (m.blocks||[]).forEach((b,i)=> body += blockHtml(m,b,i));
+    if(m.sheet) body += sheetHtml();
+    if(m.mailbox) body += mailboxHtml();
+    if(m.quiz) body += `<div class="quiz">${m.quiz.map((q,i)=>{ const a=S.quiz[m.id+i]; const ans = a!==undefined;
+      return `<div class="q">${esc(q[0])}<div class="opts"><button data-q="${m.id}|${i}|1" class="${ans&&a===true?(q[1]?'right':'wrong'):''}">Sí, puedo pegarlo</button><button data-q="${m.id}|${i}|0" class="${ans&&a===false?(!q[1]?'right':'wrong'):''}">No, no lo pego</button></div>${ans?`<div class="why">${a===q[1]?'✔':'✘'} ${esc(q[2])}</div>`:''}</div>` }).join('')}</div>`;
+    const needCopy = !!(m.blocks||m.area||m.builder||m.pabuilder) ; const copied = !!S.copied[m.id];
+    (m.checks||[]).forEach(c=>{ const lock = needCopy && !copied && !c.free && !S.done[m.id+c.id];
+      body += `<label class="chk ${lock?'locked':''}"><input type="checkbox" data-c="${m.id}|${c.id}" ${S.done[m.id+c.id]?'checked':''} ${lock?'disabled':''}>${esc(c.t)}<span class="p">+${c.p}</span></label>` });
+    if(needCopy && !copied && (m.checks||[]).some(c=>!c.free)) body += `<p class="hint">Copia un prompt y pruébalo en Copilot para poder marcarlo.</p>`;
+    return `<div class="card ${open?'open':''} ${g===t?'done':''}" data-id="${m.id}"><div class="mh"><div><div class="k">${esc(m.k)}</div><h3>${esc(m.t)}</h3></div><span class="sc">${g===t?'✔ ':''}✦ ${g}/${t}</span><span class="chev">▾</span></div><div class="mb">${body}</div></div>` };
+  $('#mlist').innerHTML = MISSIONS.filter(m=>m.tab!=='p').map(cardHtml).join('');
+  $('#plist').innerHTML = MISSIONS.filter(m=>m.tab==='p').map(cardHtml).join('');
+  const sum=f=>MISSIONS.filter(f).reduce((a,m)=>{ const [g,t]=mScore(m); return [a[0]+g,a[1]+t] },[0,0]); const c=sum(m=>m.tab!=='p'), p=sum(m=>m.tab==='p'); $('#tsC').textContent='✦ '+c[0]+'/'+c[1]; $('#tsP').textContent='✦ '+p[0]+'/'+p[1];
+}
+const openSet = new Set(store.get('open', ['m1']));
+
+document.addEventListener('click', async e=>{
+  const h = e.target.closest('.mh'); if(h){ const id=h.parentNode.dataset.id; openSet.has(id)? openSet.delete(id) : openSet.add(id); store.set('open',[...openSet]); h.parentNode.classList.toggle('open'); return }
+  const cp = e.target.closest('.cp'); if(cp){ const m = MISSIONS.find(x=>x.id===cp.dataset.m); const i=cp.dataset.i; let text='';
+    if(i==='b') text=builderText(); else if(i==='pb') text=paText(); else if(i==='av'||i==='ar'){ const a=AREAS.find(x=>x.n===S.area); text = (i==='av'? a.v : a.r) + '\n\n' + tsv(a.d) } else text = m.blocks[+i].text;
+    try{ await navigator.clipboard.writeText(text) }catch(err){ const ta=document.createElement('textarea'); ta.value=text; document.body.appendChild(ta); ta.select(); try{document.execCommand('copy')}catch(x){} ta.remove() }
+    const first = !S.copied[m.id]; S.copied[m.id]=true; save(); toast('Copiado. Pégalo en Copilot.'); if(first) render(); else { cp.textContent='Copiado ✓'; cp.classList.add('ok') } return }
+  const q = e.target.closest('[data-q]'); if(q){ const [mid,i,v]=q.dataset.q.split('|'); const key=mid+i; if(S.quiz[key]!==undefined) return; const before=points(); S.quiz[key]= v==='1'; save(); const m=MISSIONS.find(x=>x.id===mid);
+    const ok = S.quiz[key]===m.quiz[+i][1]; if(ok) sparks(q, 1); afterChange(before); return }
+  if(e.target.id==='mbSend'){ sendMail(); return }
+  if(e.target.id==='printSheet'){ $('#printArea').innerHTML=chuletaDoc(); document.body.classList.add('printing'); setTimeout(()=>{ window.print(); setTimeout(()=>document.body.classList.remove('printing'),500) },50); return }
+  if(e.target.id==='copySheet'){ const txt=chuletaResumen(); try{ await navigator.clipboard.writeText(txt) }catch(err){} toast('Resumen copiado.'); return }
+});
+document.addEventListener('change', e=>{
+  const c = e.target.closest('[data-c]'); if(c){ const [mid,cid]=c.dataset.c.split('|'); const before=points(); S.done[mid+cid]=c.checked; save(); if(c.checked) sparks(c, MISSIONS.find(x=>x.id===mid).checks.find(x=>x.id===cid).p); afterChange(before); return }
+  if(e.target.dataset && e.target.dataset.pa){ S.pa=S.pa||{}; S.pa[e.target.dataset.pa]=e.target.value; save(); const o=$('#paOut'); if(o) o.textContent=paText(); return }
+  if(e.target.id==='areaSel'){ S.area=e.target.value; save(); render(); return }
+});
+document.addEventListener('input', e=>{ const pa=e.target.dataset && e.target.dataset.pa; if(pa){ S.pa=S.pa||{}; S.pa[pa]=e.target.value; save(); const o=$('#paOut'); if(o) o.textContent=paText(); return }
+  const b=e.target.dataset && e.target.dataset.b; if(b){ S.builder[b]=e.target.value; save(); const o=$('#bOut'); if(o) o.textContent=builderText() } });
+
+function afterChange(before){ const p=points(); render(); pushMe(); const l0=level(before), l1=level(p);
+  if(l1.p>l0.p){ $('#bTitle').textContent='¡Eres '+l1.n+'!'; const nx=nextLevel(p); $('#bText').textContent = nx? `Llevas ${p} chispas. Siguiente nivel: ${nx.n} (${nx.p}).` : `Has llegado a lo más alto con ${p} chispas.`; $('#banner').classList.add('show') }
+  if(!$('#board').classList.contains('hide')) drawBoard(); }
+$('#bClose').onclick = ()=> $('#banner').classList.remove('show');
+function toast(t){ const el=$('#toast'); el.textContent=t; el.classList.add('show'); clearTimeout(toast.h); toast.h=setTimeout(()=>el.classList.remove('show'),1800) }
+function sparks(el,n){ const r=el.getBoundingClientRect(); for(let i=0;i<Math.min(8,2+n);i++){ const s=document.createElement('span'); s.className='spark'; s.textContent='✦'; s.style.left=(r.left+r.width/2)+'px'; s.style.top=(r.top)+'px'; s.style.setProperty('--dx',(Math.random()*160-80)+'px'); s.style.setProperty('--dy',(-60-Math.random()*90)+'px'); document.body.appendChild(s); setTimeout(()=>s.remove(),1000) } }
+
+// ---------- Marcador ----------
+document.querySelectorAll('.tabs [data-t]').forEach(b=> b.onclick = ()=>{ document.querySelectorAll('.tabs [data-t]').forEach(x=>x.classList.toggle('on', x===b)); $('#missions').classList.toggle('hide', b.dataset.t!=='missions'); $('#pa').classList.toggle('hide', b.dataset.t!=='pa'); $('#board').classList.toggle('hide', b.dataset.t!=='board'); if(b.dataset.t==='board') drawBoard() });
+async function drawBoard(){
+  const players = await fetchPlayers(); let rows;
+  if(players) rows = Object.entries(players).filter(([,v])=>v&&v.n).map(([id,v])=>({id, n:v.n, p:+v.p||0}));
+  else rows = S.name ? [{id:S.id, n:S.name, p:points()}] : [];
+  rows.sort((a,b)=> b.p-a.p || a.n.localeCompare(b.n));
+  $('#sessName').textContent = SESSION!=='taller' ? '· '+SESSION : '';
+  $('#blist').innerHTML = rows.length ? rows.map((r,i)=>`<div class="row ${r.id===S.id?'me':''}"><span class="pos">${i+1}</span><div><span class="nm">${esc(r.n)}</span><span class="lv">${esc(level(r.p).n.toUpperCase())}</span><div class="meter"><i style="width:${Math.min(100,r.p/MAXP*100)}%"></i></div></div><span class="pp">✦ ${r.p}</span></div>`).join('')
+    : '<div class="row">Aún no hay nadie en el marcador.</div>';
+  if(!LIVE) $('#blist').insertAdjacentHTML('beforeend','<div class="row hint">El marcador compartido no está conectado: aquí solo ves tus chispas.</div>');
+}
+$('#bigscreen').onclick = ()=>{ const u=new URL(location.href); u.searchParams.set('pantalla','1'); window.open(u.toString(),'_blank') };
+
+function start(){ $('#gate').classList.add('hide'); $('#app').classList.remove('hide'); setLive(LIVE); render(); pushMe(); }
+// Pantalla grande para el proyector: ?pantalla=1
+if(qs.get('pantalla')==='1'){ document.body.classList.add('screen'); $('#scrUrl').textContent = location.host + location.pathname.replace(/index\.html$/,'') + (SESSION!=='taller' ? '?s='+SESSION : ''); $('#gate').classList.add('hide'); $('#app').classList.remove('hide'); $('#board').classList.remove('hide'); drawBoard(); setInterval(drawBoard, 3000) }
+else if(S.name){ start() }
+setInterval(()=>{ if(!$('#board').classList.contains('hide') && !document.body.classList.contains('screen')) drawBoard() }, 4000);
+</script>
+</body>
+</html>
